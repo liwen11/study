@@ -17,7 +17,6 @@ export default {
     async handleUploadFile(e) {
       let [file] = e.target.files
       if (!file) return 
-      console.log(file.slice(0, 6).toUpperCase())
       let fileType = await this.getFileType(file)
       if (fileType) {
         console.log(`当前上传文件类型为${fileType}`)
@@ -30,8 +29,8 @@ export default {
       let fileType = FILE_TYPE_MAP[str]
       if (!fileType) {
         let len = file.size
-        let a = this.blobToString(file, 0, 2)
-        let b = this.blobToString(file, -2, len)
+        let a = await this.blobToString(file, 0, 2)
+        let b = await this.blobToString(file, -2, len)
         if (a == 'FF D8' && b == 'FF D9') {
           fileType = 'jpg'
         }
