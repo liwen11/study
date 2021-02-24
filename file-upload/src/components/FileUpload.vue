@@ -1,10 +1,13 @@
 <template>
   <div>
     <input type="file" @change='handleUploadFile'>
+    <button @click="handleUpload">上传</button>
   </div>
 </template>
 
 <script>
+import sparkMd5 from 'spark-md5'
+const CHUNK_SIZE = 1*1024 * 10 // 10KB
 // jpg开头两个仕 FF D8
 // 结尾两个仕 FF D9
 const FILE_TYPE_MAP = {
@@ -13,7 +16,40 @@ const FILE_TYPE_MAP = {
   '52 49 46 46': 'avi'
 }
 export default {
+  data() {
+    return {
+      file: null,
+      hash: null
+    }
+  },
   methods: {
+    // 生成文件块 Blob.slice语法
+    createFileChunk(file, size = CHUNK_SIZE) {
+      const chunks = []
+      let cur = 0
+      while(cur < file.size) {
+        chunks.push({index: cur, file: file.slice(cur, cur+size)})
+        cur += size
+      }
+      return chunks
+    },
+    calculateHashSample() {
+      return new Promise(resolve => {
+        const spark = new sparkMd5.ArrayBuffer()
+      })
+    },
+    handleUpload() {
+      if (!this.file) {
+        console.log('请选择文件！')
+        return
+      }
+      // 生成文件块
+      let chunks = this.createFileChunk(this.file)
+
+      // 计算hash 文件指纹标识
+      this.hash = await this.calculateHashSample()
+      debugger
+    },
     async handleUploadFile(e) {
       let [file] = e.target.files
       if (!file) return 
@@ -23,7 +59,8 @@ export default {
       } else {
         console.log('当前上传文件不合法')
       }
-      this.getHW(file, fileType)
+      // this.getHW(file, fileType)
+      this.file = file
     },
     async getFileType(file) {
       let str = await this.blobToString(file.slice(0, 4))
