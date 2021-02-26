@@ -33,12 +33,56 @@ export default {
       }
       return chunks
     },
+
+    // 抽样hash
     calculateHashSample() {
       return new Promise(resolve => {
-        const spark = new sparkMd5.ArrayBuffer()
+        const file = this.file
+
+        // 1.设置切片大小
+        const size = this.file.size
+        const offset = 1 * 1024
+
+        // 2. 第一个和最后一个切片全部内容，其他切片的取 首中尾三个地方各2个字节
+
+        // 首字节
+        let chunks = [file.slice(0, offset)]
+        //前面100k
+        let cur = offset
+        while(cur < size) {
+          // 最后一个切片
+          if (cur + offset > files.size) {
+            chunks.push(cur, files.length)
+          } else {
+            // 中间切片 取每个切片前后两个字节及中间两个字节
+            const mid = cur + offset/2
+            const end = cur + offset
+            chunks.push(files.slice(cur, cur + 2))
+            chunks.push(files.slice(mid, mid + 2))
+            chunks.push(files.slice(end - 2, end))
+          }
+          cur += offset
+        }
+
+        // 3.合并后的内容
+        const reader = new FileReader()
+        reader.readAsArrayBuffer(new Blob(chunks))
+
+        reader.onload = e => {
+          // 4.计算 md5, 这个 hash的结果，就是文件存在，有小概率误判，但是如果不存在，是100%准的的 ，
+          // 和布隆过滤器的思路有些相似
+
+          // 每个文件的md5值都是唯一的，正因为每个文件的md5是一样的，那么，我们在做文件上传的时候，
+          // 就只要在前端先获取要上传的文件md5，并把文件md5传到服务器，对比之前文件的md5，
+          // 如果存在相同的md5，我们只要把文件的名字传到服务器关联之前的文件即可，并不需要再次去上传相同的文件，
+          // 再去耗费存储资源、上传的时间、网络带宽。
+          const spark = new sparkMd5.ArrayBuffer()
+          spark.append(e.target.result)
+          resolve(spark.end())
+        }
       })
     },
-    handleUpload() {
+    async handleUpload() {
       if (!this.file) {
         console.log('请选择文件！')
         return
