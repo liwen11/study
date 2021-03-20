@@ -106,7 +106,6 @@ class Promise {
   }
 
   finally(cb) {
-    debugger
     let P = this.constructor
     return this.then(
       value => P.resolve(cb()).then(() => value),
@@ -146,15 +145,27 @@ Promise.all = function(arr) {
   }
   return new Promise((resolve, reject) => {
     for (let i = 0; i < arr.length; i++) {
-      if (isPromise(arr[i])) {
-        arr[i].then(data => {
-          processData(i, data, resolve)
-        }, reject)
-      } else {
+      // 方法一：
+      // if (isPromise(arr[i])) {
+      //   arr[i].then(data => {
+      //     processData(i, data, resolve)
+      //   }, reject)
+      // } else {
+      //   processData(i, data, resolve)
+      // }
+      // 方法二： 
+      Promise.resolve(arr[i]).then(data => {
         processData(i, data, resolve)
-      }
+      }).catch(e => reject(e))
     }
   })
 }
 
+Promise.race = function(arr) {
+  return new Promise((resolve, reject) => {
+    for(let i = 0; i < arr.length; i++) {
+      arr[i].then(resolve, reject)
+    }
+  })
+}
 module.exports = Promise

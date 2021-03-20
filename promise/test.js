@@ -69,7 +69,27 @@ const Promise = require('./promise')
 // }).finally(() => {
 //   console.log('fff')
 // })
-let arr = [1, 3, 5]
-Promise.all(arr).then(data => {
+// let arr = [1, 3, 5]
+// Promise.all(arr).then(data => {
+//   console.log(data)
+// })
+
+// let p = new Promise((resolve, reject) => {
+//   resolve(1000)
+// })
+// p.finally(() => {
+//   console.log('dddd')
+// })
+let P1 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve(100)
+  }, 1000)
+})
+
+let P2 = new Promise((resolve, reject) => {
+  resolve(200)
+})
+let arr = [P1, P2]
+Promise.race(arr).then(data => {
   console.log(data)
 })
